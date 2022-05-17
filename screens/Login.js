@@ -17,21 +17,16 @@ import {
 import { Input } from "@rneui/base";
 import { Formik } from "formik";
 import * as yup from "yup";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLogin } from "../context/LoginProvider";
 import ModalLogin from "../components/login/modalLogin";
 import ColorsPPS from "../utils/ColorsPPS";
 import LoadingScreen from "../utils/loadingScreen";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-  getCurrentUser,
-  logInWithEmailPassword,
-} from "../utils/actionsFirebase";
+import firebase from "../dataBase/firebase";
 
 const Login = (props) => {
-  const { setisFinishSplash, setIsLogIn } = useLogin();
   const { navigation } = props;
-  const { setEmail_, setProfile } = useLogin();
+  const { setProfile, setIsLogIn } = useLogin();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
@@ -40,147 +35,51 @@ const Login = (props) => {
 
   const [users, setUsers] = useState([]);
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    TraerData();
+  }, []);
 
-  const GuardarData = async () => {
-    // guardo la informacion en el asyn mientras se carga la aplicacion
-    try {
-      console.log("guardando user");
-      await AsyncStorage.setItem(
-        "Usuarios",
-        JSON.stringify([
-          {
-            id: 1,
-            correo: "admin@admin.com",
-            clave: 1111,
-            perfil: "admin",
-            sexo: "femenino",
-          },
-          {
-            id: 2,
-            correo: "invitado@invitado.com",
-            clave: 2222,
-            perfil: "invitado",
-            sexo: "femenino",
-          },
-          {
-            id: 3,
-            correo: "usuario@usuario.com",
-            clave: 3333,
-            perfil: "usuario",
-            sexo: "masculino",
-          },
-          {
-            id: 4,
-            correo: "anonimo@anonimo.com",
-            clave: 4444,
-            perfil: "usuario",
-            sexo: "masculino",
-          },
-          {
-            id: 5,
-            correo: "tester@tester.com",
-            clave: 5555,
-            perfil: "tester",
-            sexo: "femenino",
-          },
-          {
-            id: 420,
-            correo: "invitado@gmail.com",
-            clave: "invitado1234",
-            perfil: "usuario",
-            sexo: "masculino",
-          },
-          {
-            id: 421,
-            correo: "invitado1@gmail.com",
-            clave: "invitado1234",
-            perfil: "usuario",
-            sexo: "masculino",
-          },
-          {
-            id: 422,
-            correo: "invitado2@gmail.com",
-            clave: "invitado1234",
-            perfil: "usuario",
-            sexo: "masculino",
-          },
-          {
-            id: 423,
-            correo: "invitado3@gmail.com",
-            clave: "invitado1234",
-            perfil: "usuario",
-            sexo: "masculino",
-          },
-        ])
-      );
-    } catch (e) {
-      console.log("error guardando en el storage" + e);
-    }
-  };
   const TraerData = async () => {
-    try {
-      const value = await AsyncStorage.getItem("Usuarios");
-      if (value !== null) {
-        setUsers(value);
-        console.log("ya cargaron los usuarios!!!");
-      }
-    } catch (e) {
-      console.log("error TRAYENDO en el storage" + e);
-    }
-  };
-  const validarCredencial = (values) => {
-    let retorno = false;
-    if (users.length > 0) {
-      JSON.parse(users).forEach((element) => {
-        if (
-          element.correo == values.email &&
-          element.clave == values.password
-        ) {
-          retorno = true;
-        }
+    firebase.db.collection("usuarios").onSnapshot((querySnapshot) => {
+      const usuarios = [];
+      querySnapshot.docs.forEach((doc) => {
+        const { perfil, correo, clave, fotosSubidas, sexo, nombre } =
+          doc.data(); // destructuro el doc
+        usuarios.push({
+          perfil: perfil,
+          correo: correo,
+          clave: clave,
+          fotosSubidas: fotosSubidas,
+          sexo: sexo,
+          id: doc.id,
+          nombre: nombre, // id del DOCUMENTO
+        });
       });
-    } else {
-      console.log("LOS USUARIOS ESTAN VACIOS!!!");
-    }
-
-    return retorno;
+      setUsers(usuarios);
+    });
   };
+
   const onPressLogIn = async (values) => {
-    //console.log(values)
     setLoading(true);
-    let resultLogin = await logInWithEmailPassword(
-      values.email,
-      values.password
-    );
-    if (!resultLogin.statusResponse) {
-      setShowModal(true);
-      setEmail("");
-      setPassword("");
-      return;
-    } else {
-      setProfile(getCurrentUser());
-      setTimeout(() => {
-        setEmail_(values.email);
+    console.log(values);
+    let logged = false;
+    users.forEach((user) => {
+      if (user.correo == values.email && user.clave == values.password) {
+        setProfile(user);
+        logged = true;
+      }
+    });
+    setTimeout(() => {
+      setLoading(false);
+      if (logged) {
         setIsLogIn(true);
-      }, 2000);
-      setEmail("");
-      setPassword("");
-    }
-    console.log(resultLogin);
+      } else {
+        setShowModal(true);
+        return;
+      }
+    }, 2000);
 
-    /*if (validarCredencial(values)) {
-      setLoading(true);
-
-      setTimeout(() => {
-        setEmail_(values.email);
-        setIsLogIn(true);
-      }, 2000);
-    } else {
-      setShowModal(true);
-    }
-    setEmail("");
-    setPassword(""); */
+    //console.log(values)
   };
   const btnLogin = (bgColor, color, txtName, action) => {
     return (
@@ -216,16 +115,9 @@ const Login = (props) => {
   };
   const btnInvited = (number, txtName) => {
     const onpressInvited = (numero) => {
-      setEmail(`invitado${numero}@gmail.com`);
-      setPassword("invitado1234");
-      setLoading(true);
-      setTimeout(() => {
-        setIsLogIn(true);
-        setEmail("");
-        setPassword("");
-        setLoading(false);
-      }, 2000);
+      onPressLogIn({ email: "anonimo@anonimo.com", password: "4444" });
     };
+
     return (
       <TouchableOpacity
         style={{

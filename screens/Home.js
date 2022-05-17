@@ -13,11 +13,6 @@ import LoadingScreen from "../utils/loadingScreen";
 import fondoGood from "../assets/home/fondoGood.png";
 import fondoBad from "../assets/home/fondoBad.png";
 import { Entypo, FontAwesome, Fontisto } from "@expo/vector-icons";
-import {
-  closeSession,
-  getCurrentUser,
-  isUserLogged,
-} from "../utils/actionsFirebase";
 
 export default Home = (props) => {
   const { navigation } = props;
@@ -27,7 +22,7 @@ export default Home = (props) => {
   const [login, setLogin] = useState(null);
 
   useEffect(() => {
-    setLogin(isUserLogged());
+    setLogin(true);
   }, []);
 
   const btnHome = (bgColor, tittle, img, photosGood = true) => {
@@ -82,6 +77,14 @@ export default Home = (props) => {
     );
   };
 
+  const closeSession = () => {
+    setTimeout(() => {
+      setLoading(false);
+      setIsLogIn(false);
+      //navigation.navigate("Login");
+    }, 2000);
+  };
+
   return loading ? (
     <LoadingScreen message={msjLoading} />
   ) : (
@@ -127,17 +130,7 @@ export default Home = (props) => {
           onPress={() => {
             setMsjLoading("Cerrando Sesión.");
             setLoading(true);
-            closeSession()
-              .then(() => {
-                setTimeout(() => {
-                  setLoading(false);
-                  setIsLogIn(false);
-                  //navigation.navigate("Login");
-                }, 2000);
-              })
-              .catch((err) => {
-                alert(err);
-              });
+            closeSession();
           }}
         >
           <Text
