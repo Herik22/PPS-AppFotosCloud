@@ -22,15 +22,17 @@ import { useLogin } from "../../context/LoginProvider";
 
 export default ModalGuardarFoto = (props) => {
   const { url, setModal, modal, setLoading, navigation } = props;
-  const { profile, setProfile } = useLogin();
-
+  const { profile, setProfile, photosGood } = useLogin();
+  const nameCollection = `post${photosGood ? "Buenos" : "Malos"}`;
+  const nameStorage = `fotos${photosGood ? "Buenas" : "Malas"}`;
   useEffect(() => {
+    console.log(" profile MODALGUARDARPHOTO");
     console.log(profile);
   }, []);
   let subirImgFB = async (
     image = "false",
     path = "fotosBuenas",
-    name = "namefoto"
+    name = nameStorage
   ) => {
     const result = { statusResponses: false, error: null, url: null };
 
@@ -53,20 +55,33 @@ export default ModalGuardarFoto = (props) => {
   };
 
   const actualizarFotosUsuario = async (id, data) => {
-    const dbRef = firebase.db.collection("usuarios").doc(id);
-    await dbRef.set({
+    console.log();
+    let objGod = {
       ...profile,
-      fotosSubidas: data,
-    });
+      fotosSubidasBuenas: data,
+    };
+    let objBad = {
+      ...profile,
+      fotosSubidasMalas: data,
+    };
+
+    const dbRef = firebase.db.collection("usuarios").doc(id);
+    await dbRef.set(photosGood ? objGod : objBad);
   };
   const guardarFoto = () => {
     setLoading(true);
-    let fotosUser = profile.fotosSubidas;
-    subirImgFB(url, "fotosBuenas", uuidv4()).then(async (data) => {
-      console.log(`${new Date()}`);
+
+    let fotosUser = photosGood
+      ? profile.fotosSubidasBuenas
+      : profile.fotosSubidasMalas;
+
+    let profileGod = { ...profile, fotosSubidasBuenas: fotosUser };
+    let profileBad = { ...profile, fotosSubidasMalas: fotosUser };
+
+    subirImgFB(url, nameStorage, uuidv4()).then(async (data) => {
       let fecha = new Date();
-      let hoy = fecha.toDateString();
-      await firebase.db.collection("postBuenos").add({
+      let hoy = fecha.toLocaleDateString();
+      await firebase.db.collection(nameCollection).add({
         idCreador: profile.id,
         likes: [],
         url: data.url,
@@ -75,12 +90,11 @@ export default ModalGuardarFoto = (props) => {
       });
       //guardar la foto en el array del usuario
       fotosUser.push({ url: data.url });
-      setProfile({ ...profile, fotosSubidas: fotosUser });
+      setProfile(photosGood ? profileGod : profileBad);
       actualizarFotosUsuario(profile.id, fotosUser);
       setLoading(false);
       navigation.navigate("Photos");
       // REDIRIGIR A LA GALERIA
-      alert("guardado");
     });
   };
 

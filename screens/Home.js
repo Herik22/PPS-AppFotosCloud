@@ -107,10 +107,6 @@ export default Home = (props) => {
           alignItems: "center",
         }}
       >
-        <Text style={{ textAlign: "center", paddingTop: 40 }}>
-          {" "}
-          {login ? "LOGEADO" : "NO LOGEADO"}
-        </Text>
         <TouchableOpacity
           style={{
             width: Dimensions.get("window").width * 0.3,

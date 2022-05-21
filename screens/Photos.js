@@ -44,33 +44,42 @@ export default Photos = (props) => {
   const { photosGood, setPhotosGood, profile } = useLogin();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const nameCollection = `post${photosGood ? "Buenos" : "Malos"}`;
   useFocusEffect(
     useCallback(() => {
-      const TraerData = async () => {
-        firebase.db.collection("postBuenos").onSnapshot((querySnapshot) => {
-          const posts = [];
-          querySnapshot.docs.forEach((doc) => {
-            const { idCreador, likes, autorName, url, fecha } = doc.data(); // destructuro el doc
-            posts.push({
-              idCreador: idCreador,
-              likes: likes,
-              id: doc.id,
-              autorName: autorName,
-              url: url,
-              fecha: fecha, // id del DOCUMENTO
+      const TraerDataOrdenada = async () => {
+        firebase.db
+          .collection(nameCollection)
+          .orderBy("fecha", "desc")
+          .onSnapshot((querySnapshot) => {
+            const posts = [];
+            querySnapshot.docs.forEach((doc) => {
+              const { idCreador, likes, autorName, url, fecha } = doc.data(); // destructuro el doc
+              const id_ = doc.id.substring(0, 6);
+              posts.push({
+                name: id_,
+                idCreador: idCreador,
+                likes: likes,
+                id: doc.id,
+                autorName: autorName,
+                url: url,
+                fecha: fecha, // id del DOCUMENTO
+              });
             });
+            setPosts(posts);
           });
-          setPosts(posts);
-          console.log("profiule");
-          console.log(profile);
-        });
       };
-      TraerData();
+      //console.log(nameCollection);
+      //console.log(photosGood);
+      // console.log(posts);
+      TraerDataOrdenada();
     }, [])
   );
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    console.log("profile PHOTOS");
+    console.log(profile);
+  }, []);
 
   const btnAction = (bgColor, titulo, colorTitulo, icon, action = () => {}) => {
     return (
@@ -112,7 +121,7 @@ export default Photos = (props) => {
   };
 
   return loading ? (
-    <LoadingScreen message={"Cerrando Sesión"} />
+    <LoadingScreen message={"Trayendo información ... "} />
   ) : (
     <View
       style={{
@@ -146,7 +155,7 @@ export default Photos = (props) => {
               justifyContent: "center",
             }}
           >
-            <ListPhotos photos={photosGood ? posts : Dataimg2} />
+            <ListPhotos photos={posts} />
           </View>
         }
 

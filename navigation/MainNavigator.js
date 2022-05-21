@@ -16,7 +16,7 @@ const Stack = createNativeStackNavigator();
 
 const Init = () => {
   return (
-    <Stack.Navigator initialRouteName="Login">
+    <Stack.Navigator initialRouteName="Splash">
       <Stack.Screen
         component={Splash}
         options={{ headerShown: false }}
@@ -79,7 +79,7 @@ const MainStack = () => {
         component={Estadisticas}
         options={{
           headerBackTitle: "Volver",
-          title: "",
+          title: "Estadisticas",
           headerStyle: {
             backgroundColor: ColorsPPS.morado,
           },
@@ -94,7 +94,7 @@ const MainStack = () => {
         component={MisFotos}
         options={{
           headerBackTitle: "Volver",
-          title: "",
+          title: "Mis Fotos",
           headerStyle: {
             backgroundColor: ColorsPPS.morado,
           },

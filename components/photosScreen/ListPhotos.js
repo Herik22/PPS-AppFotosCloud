@@ -8,21 +8,27 @@ import {
   View,
   Dimensions,
   Image,
+  Alert,
 } from "react-native";
 import { Entypo, AntDesign, Octicons, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/core";
 import { useLogin } from "../../context/LoginProvider";
 import firebase from "../../dataBase/firebase";
+import ColorsPPS from "../../utils/ColorsPPS";
+
 const ListPhotos = (props) => {
   const { photos } = props;
-  const [cartFinal, setCartFinal] = useState("");
   const { photosGood, setPhotosGood, profile } = useLogin();
+  const nameCollection = `post${photosGood ? "Buenos" : "Malos"}`;
 
+  useEffect(() => {}, []);
   const ItemList = (props) => {
     const { info } = props;
-    const { url, autorName, fecha, id, likes } = info.item;
+    const { url, autorName, fecha, id, likes, name } = info.item;
+    const votos = likes.length;
+
     let votada = false;
-    console.log(info.item);
+    //console.log(info.item);
 
     likes.forEach((element) => {
       if (element == profile.id) {
@@ -40,11 +46,12 @@ const ListPhotos = (props) => {
       });
 
       if (yaVoto) {
-        alert("YA VOTO");
+        return;
       } else {
-        alert("NO HA VOTADO");
+        //NO HA VOTADO
+        console.log("no ha votado");
         votosUsuarios.push(profile.id);
-        const dbRef = firebase.db.collection("postBuenos").doc(id);
+        const dbRef = firebase.db.collection(nameCollection).doc(id);
         await dbRef.set({
           ...info.item,
           likes: votosUsuarios,
@@ -97,6 +104,28 @@ const ListPhotos = (props) => {
                 justifyContent: "flex-start",
                 alignItems: "center",
                 borderWidth: 0,
+                marginBottom: 30,
+                backgroundColor: ColorsPPS.amarillo,
+              }}
+            >
+              <Text
+                style={{
+                  fontWeight: "bold",
+                  fontSize: 20,
+                  marginRight: 5,
+                }}
+              >
+                ID:
+              </Text>
+              <Text style={{ fontSize: 20 }}> {name}</Text>
+            </View>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "flex-start",
+                alignItems: "center",
+                borderWidth: 0,
               }}
             >
               <Text
@@ -116,11 +145,11 @@ const ListPhotos = (props) => {
               }}
             >
               <Text
-                style={{ fontWeight: "bold", fontSize: 12, marginRight: 5 }}
+                style={{ fontWeight: "bold", fontSize: 14, marginRight: 5 }}
               >
                 Fecha:
               </Text>
-              <Text style={{ fontSize: 10 }}>{fecha}</Text>
+              <Text style={{ fontSize: 12, fontWeight: "bold" }}>{fecha}</Text>
             </View>
           </View>
 
@@ -150,6 +179,7 @@ const ListPhotos = (props) => {
                 size={60}
                 onPress={() => {}}
               />
+              <Text style={{ textAlign: "center" }}> Votos: {votos} </Text>
             </TouchableOpacity>
           </View>
         </View>

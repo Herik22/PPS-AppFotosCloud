@@ -14,8 +14,12 @@ import React, { Component, useState, useRef, useEffect } from "react";
 import { Camera } from "expo-camera";
 import ModalGuardarFoto from "../components/fotos/ModalGuardarFoto";
 import LoadingScreen from "../utils/loadingScreen";
+import { useLogin } from "../context/LoginProvider";
+import ColorsPPS from "../utils/ColorsPPS";
+
 export default CamaraPost = (props) => {
   const { navigation } = props;
+  const { photosGood } = useLogin();
   const cameraRef = useRef();
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [hasPermission, setHasPermission] = useState(null);
@@ -37,7 +41,7 @@ export default CamaraPost = (props) => {
   };
   const takePicture = async () => {
     if (cameraRef.current) {
-      const options = { quality: 0.5, base64: true, skipProcessing: true };
+      const options = { quality: 0.1, base64: true, skipProcessing: true };
       const data = await cameraRef.current.takePictureAsync(options);
       console.info(data);
       setUrl(data.uri);
@@ -96,9 +100,7 @@ export default CamaraPost = (props) => {
             onPress={() => {
               takePicture();
             }}
-          >
-            <Text style={styles.text}> Flip </Text>
-          </TouchableOpacity>
+          ></TouchableOpacity>
         </View>
       </Camera>
     </View>
@@ -120,7 +122,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 5,
     borderRadius: 60,
-    backgroundColor: "blue",
+    backgroundColor: ColorsPPS.morado,
     justifyContent: "center",
     alignContent: "center",
     margin: 20,

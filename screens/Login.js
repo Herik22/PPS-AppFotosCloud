@@ -43,13 +43,21 @@ const Login = (props) => {
     firebase.db.collection("usuarios").onSnapshot((querySnapshot) => {
       const usuarios = [];
       querySnapshot.docs.forEach((doc) => {
-        const { perfil, correo, clave, fotosSubidas, sexo, nombre } =
-          doc.data(); // destructuro el doc
+        const {
+          perfil,
+          correo,
+          clave,
+          fotosSubidasBuenas,
+          fotosSubidasMalas,
+          sexo,
+          nombre,
+        } = doc.data(); // destructuro el doc
         usuarios.push({
           perfil: perfil,
           correo: correo,
           clave: clave,
-          fotosSubidas: fotosSubidas,
+          fotosSubidasBuenas: fotosSubidasBuenas,
+          fotosSubidasMalas: fotosSubidasMalas,
           sexo: sexo,
           id: doc.id,
           nombre: nombre, // id del DOCUMENTO
@@ -308,7 +316,7 @@ const Login = (props) => {
         backgroundColor="transparent"
       />
       <LinearGradient
-        colors={["#FFFFF", ColorsPPS.amarillo, ColorsPPS.morado]}
+        colors={["#FFFFF", "#C51AEB", " #5E17EB"]}
         style={{
           width: Dimensions.get("window").width * 0.8,
           height: Dimensions.get("window").height * 0.3,
@@ -352,7 +360,7 @@ const Login = (props) => {
           }}
         >
           {" "}
-          Fotos Cloud{" "}
+          Relevamiento Visual{" "}
         </Text>
       </View>
 

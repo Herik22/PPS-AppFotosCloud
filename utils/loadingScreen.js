@@ -27,7 +27,7 @@ const LoadingScreen = ({ message }) => {
           translucent
           backgroundColor="transparent"
         />
-        <ActivityIndicator size="large" color={ColorsPPS.escarcha} />
+        <ActivityIndicator size="large" color={"white"} />
         <Text
           style={{
             color: "white",
