@@ -22,6 +22,7 @@ const ListPhotos = (props) => {
   const nameCollection = `post${photosGood ? "Buenos" : "Malos"}`;
 
   useEffect(() => {}, []);
+
   const ItemList = (props) => {
     const { info } = props;
     const { url, autorName, fecha, id, likes, name } = info.item;
