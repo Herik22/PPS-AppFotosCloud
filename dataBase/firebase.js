@@ -1,6 +1,8 @@
-import firebase from "firebase";
-import "firebase/firestore";
+//import firebase from "firebase";
+//import "firebase/firestore";
 
+const firebase = {};
+const db = {};
 /*const firebaseConfig = {
   apiKey: "AIzaSyD-AkOVFekfR0omV3bdxMJpG3J07HhE7lk",
   authDomain: "appfotoscloud.firebaseapp.com",
@@ -9,6 +11,7 @@ import "firebase/firestore";
   messagingSenderId: "552111187609",
   appId: "1:552111187609:web:8ccec0d7869611ae5d3a08",
 };*/
+/*
 const firebaseConfig = {
   apiKey: "AIzaSyDtOjvBWServRsk4WCFaD2HsI_P-lEd86s",
   authDomain: "appjuegos20-af69b.firebaseapp.com",
@@ -17,9 +20,10 @@ const firebaseConfig = {
   messagingSenderId: "756720397595",
   appId: "1:756720397595:web:c1fe6a342500c8a560f7be",
 };
+*/
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+//firebase.initializeApp(firebaseConfig);
+//const db = firebase.firestore();
 export default {
   firebase,
   db,

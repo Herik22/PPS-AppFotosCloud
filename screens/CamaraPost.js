@@ -43,18 +43,14 @@ export default CamaraPost = (props) => {
     if (cameraRef.current) {
       const options = { quality: 0.1, base64: true, skipProcessing: true };
       const data = await cameraRef.current.takePictureAsync(options);
-      console.info(data);
+      //console.info(data);
       setUrl(data.uri);
       setModal(true);
     }
   };
 
   if (hasPermission === null) {
-    return (
-      <View>
-        <Text>qlq</Text>
-      </View>
-    );
+    return <View></View>;
   }
   if (hasPermission === false) {
     return (

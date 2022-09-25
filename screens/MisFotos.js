@@ -36,7 +36,8 @@ export default MisFotos = () => {
       console.log(user);
       setPhotos(photosGood ? user.fotosSubidasBuenas : user.fotosSubidasMalas);
     };
-    getUserById(profile.id);
+
+    // getUserById(profile.id);
   }, []);
 
   return (
@@ -66,7 +67,6 @@ export default MisFotos = () => {
             );
           }}
           keyExtractor={(item, index) => index.toString()}
-          style={{ borderWidth: 1 }}
         />
       </ScrollView>
       <View

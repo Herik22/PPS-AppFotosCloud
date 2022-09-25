@@ -13,17 +13,36 @@ import LoadingScreen from "../utils/loadingScreen";
 import fondoGood from "../assets/home/fondoGood.png";
 import fondoBad from "../assets/home/fondoBad.png";
 import { Entypo, FontAwesome, Fontisto } from "@expo/vector-icons";
+import { authentication, db } from "../firebase-config";
+import { getDoc, doc } from "firebase/firestore";
+const colectionUsers = "users";
 
 export default Home = (props) => {
   const { navigation } = props;
-  const { setIsLogIn, setPhotosGood } = useLogin();
+  const { setIsLogIn, setPhotosGood, setProfile } = useLogin();
   const [loading, setLoading] = useState(false);
   const [msjLoading, setMsjLoading] = useState("Cerrando Sesión");
   const [login, setLogin] = useState(null);
 
   useEffect(() => {
-    setLogin(true);
+    getProfileUser(authentication.currentUser.uid);
   }, []);
+
+  const getOneUser = async (uid) => {
+    const docRef = doc(db, colectionUsers, uid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      let auxUser = docSnap.data();
+      setProfile(auxUser);
+    } else {
+      // doc.data() will be undefined in this case
+      console.log("No such document!");
+    }
+  };
+  const getProfileUser = (uid) => {
+    //obtener usuario segun uid
+    getOneUser(uid);
+  };
 
   const btnHome = (bgColor, tittle, img, photosGood = true) => {
     return (
@@ -77,12 +96,10 @@ export default Home = (props) => {
     );
   };
 
-  const closeSession = () => {
-    setTimeout(() => {
-      setLoading(false);
-      setIsLogIn(false);
-      //navigation.navigate("Login");
-    }, 2000);
+  const closeSession = async () => {
+    setLoading(false);
+    await authentication.signOut();
+    setIsLogIn(false);
   };
 
   return loading ? (
@@ -126,7 +143,9 @@ export default Home = (props) => {
           onPress={() => {
             setMsjLoading("Cerrando Sesión.");
             setLoading(true);
-            closeSession();
+            setTimeout(() => {
+              closeSession();
+            }, 2000);
           }}
         >
           <Text
@@ -139,7 +158,7 @@ export default Home = (props) => {
             Cerrar Sesión
           </Text>
         </TouchableOpacity>
-        {btnHome(ColorsPPS.amarillo, "Cosas Buenas", fondoGood)}
+        {btnHome(ColorsPPS.amarillo, "Cosas Lindas", fondoGood)}
         {btnHome(ColorsPPS.gris, "Cosas Feas", fondoBad, false)}
       </View>
     </View>

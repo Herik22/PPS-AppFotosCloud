@@ -27,14 +27,8 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import ListPhotos from "../components/photosScreen/ListPhotos";
-import { Dataimg, Dataimg2 } from "../utils/Dataimg";
-import * as ImagePicker from "expo-image-picker";
-import Toast from "react-native-easy-toast";
-import { map } from "lodash";
-import { Avatar } from "@rneui/base";
-import { fileToBlob } from "../utils/helpers";
-import firebase from "../dataBase/firebase";
-import uuidv4 from "random-uuid-v4";
+import { db } from "../firebase-config";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { useFocusEffect } from "@react-navigation/core";
 
 export default Photos = (props) => {
@@ -45,42 +39,26 @@ export default Photos = (props) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const nameCollection = `post${photosGood ? "Buenos" : "Malos"}`;
+
   useFocusEffect(
     useCallback(() => {
-      const TraerDataOrdenada = async () => {
-        firebase.db
-          .collection(nameCollection)
-          .orderBy("fecha", "desc")
-          .onSnapshot((querySnapshot) => {
-            const posts = [];
-            querySnapshot.docs.forEach((doc) => {
-              const { idCreador, likes, autorName, url, fecha } = doc.data(); // destructuro el doc
-              const id_ = doc.id.substring(0, 6);
-              posts.push({
-                name: id_,
-                idCreador: idCreador,
-                likes: likes,
-                id: doc.id,
-                autorName: autorName,
-                url: url,
-                fecha: fecha, // id del DOCUMENTO
-              });
-            });
-            setPosts(posts);
-          });
-      };
-      //console.log(nameCollection);
-      //console.log(photosGood);
-      // console.log(posts);
-      TraerDataOrdenada();
+      traerFotos();
     }, [])
   );
 
-  useEffect(() => {
-    console.log("profile PHOTOS");
-    console.log(profile);
-  }, []);
+  useEffect(() => {}, []);
 
+  const traerFotos = async () => {
+    const fotosRef = collection(db, nameCollection);
+    const q = query(fotosRef, orderBy("fecha", "desc"), limit(10));
+    const querySnapshot = await getDocs(q);
+    let auxArrayFotos = [];
+    querySnapshot.forEach((doc) => {
+      auxArrayFotos.push(doc.data());
+    });
+
+    setPosts(auxArrayFotos);
+  };
   const btnAction = (bgColor, titulo, colorTitulo, icon, action = () => {}) => {
     return (
       <TouchableOpacity
@@ -151,11 +129,11 @@ export default Photos = (props) => {
               width: "100%",
               height: "100%",
               backgroundColor: "white",
-              borderWidth: 1,
+              borderWidth: 0,
               justifyContent: "center",
             }}
           >
-            <ListPhotos photos={posts} />
+            <ListPhotos photos={posts} updateFotos={traerFotos} />
           </View>
         }
 

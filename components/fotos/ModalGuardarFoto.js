@@ -11,14 +11,15 @@ import {
   StyleSheet,
   Modal,
 } from "react-native";
-import React, { Component, useState, useRef, useEffect } from "react";
-import { Entypo, FontAwesome } from "@expo/vector-icons";
+import React, { useEffect } from "react";
+import { FontAwesome } from "@expo/vector-icons";
 import ColorsPPS from "../../utils/ColorsPPS";
-import firebase from "../../dataBase/firebase";
-import { fileToBlob } from "../../utils/helpers";
-import { result } from "lodash";
+import updateCurrentUser from "../../dataBase/newServicesFB";
 import uuidv4 from "random-uuid-v4";
 import { useLogin } from "../../context/LoginProvider";
+import { db, app } from "../../firebase-config";
+/******* */
+import { setDoc, doc } from "firebase/firestore";
 
 export default ModalGuardarFoto = (props) => {
   const { url, setModal, modal, setLoading, navigation } = props;
@@ -26,75 +27,112 @@ export default ModalGuardarFoto = (props) => {
   const nameCollection = `post${photosGood ? "Buenos" : "Malos"}`;
   const nameStorage = `fotos${photosGood ? "Buenas" : "Malas"}`;
   useEffect(() => {
-    console.log(" profile MODALGUARDARPHOTO");
-    console.log(profile);
+    updateCurrentUser(profile.uid, setProfile).then((value) => {});
   }, []);
-  let subirImgFB = async (
-    image = "false",
-    path = "fotosBuenas",
-    name = nameStorage
-  ) => {
+
+  const pruebaCrearColeccion = async () => {
+    try {
+      const docRef = await setDoc(doc(db, "users", "eleganteKLk"), {
+        first: "970",
+        last: "PATROM",
+        born: 420,
+      });
+      console.log("Document written with ID: ", docRef);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
+  };
+  const pruebaSubirFoto = async () => {
+    let path = "FOtosPrueba";
+    let fileName = "cUALQUIERA2";
+
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    var ref = app.storage().ref(path).child(fileName).put(blob);
+    try {
+      await ref;
+
+      /**OBTENER URL */
+      const url = await app
+        .storage()
+        .ref(`${path}/${fileName}`)
+        .getDownloadURL(); //obtengo la ruta de la imagen en el storage
+
+      console.log("url obtenido", url);
+    } catch (error) {
+      console.log("error prueba subir", error);
+    }
+    console.log("se subio");
+  };
+
+  let subirImgFB = async (path, name) => {
     const result = { statusResponses: false, error: null, url: null };
 
-    const ref = firebase.firebase.storage().ref(path).child(name);
-    const blob = await fileToBlob(image);
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    var ref = app.storage().ref(path).child(name).put(blob);
 
     try {
-      await ref.put(blob); // subo la imagen
-      const url = await firebase.firebase
-        .storage()
-        .ref(`${path}/${name}`)
-        .getDownloadURL(); //obtengo la ruta de la imagen en el storage
+      await ref;
+      /**OBTENER URL */
+      const url = await app.storage().ref(`${path}/${name}`).getDownloadURL(); //obtengo la ruta de la imagen en el storage
+
       result.statusResponses = true;
       result.url = url;
+      console.log("url obtenido", url);
     } catch (error) {
+      console.log("error prueba subir", error);
       result.error = error;
     }
 
     return result;
   };
-
-  const actualizarFotosUsuario = async (id, data) => {
-    console.log();
+  const actualizarFotosUsuario = async (uid, data) => {
     let objGod = {
       ...profile,
-      fotosSubidasBuenas: data,
+      fotosLindas: data,
     };
     let objBad = {
       ...profile,
-      fotosSubidasMalas: data,
+      fotosMalas: data,
     };
-
-    const dbRef = firebase.db.collection("usuarios").doc(id);
-    await dbRef.set(photosGood ? objGod : objBad);
+    console.log("OBJETO actualizarFotosUsuario", photosGood ? objGod : objBad);
+    try {
+      await setDoc(doc(db, "users", uid), photosGood ? objGod : objBad);
+      console.log("Document ACTUALIZADO");
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
   };
   const guardarFoto = () => {
     setLoading(true);
 
-    let fotosUser = photosGood
-      ? profile.fotosSubidasBuenas
-      : profile.fotosSubidasMalas;
-
-    let profileGod = { ...profile, fotosSubidasBuenas: fotosUser };
-    let profileBad = { ...profile, fotosSubidasMalas: fotosUser };
-
-    subirImgFB(url, nameStorage, uuidv4()).then(async (data) => {
+    let idPhoto = uuidv4();
+    subirImgFB(nameStorage, idPhoto).then(async (data) => {
       let fecha = new Date();
       let hoy = fecha.toLocaleDateString();
-      await firebase.db.collection(nameCollection).add({
-        idCreador: profile.id,
+
+      /* Crear documento sobre la imagen. */
+      await setDoc(doc(db, nameCollection, idPhoto), {
+        idCreador: profile.uid,
         likes: [],
         url: data.url,
-        autorName: profile.nombre,
+        autorName: profile.name,
         fecha: hoy,
+        id: idPhoto,
       });
-      //guardar la foto en el array del usuario
-      fotosUser.push({ url: data.url });
-      setProfile(photosGood ? profileGod : profileBad);
-      actualizarFotosUsuario(profile.id, fotosUser);
-      setLoading(false);
-      navigation.navigate("Photos");
-      // REDIRIGIR A LA GALERIA
+
+      //actualizo los datos del usuario
+      updateCurrentUser(profile.uid, setProfile).then((value) => {
+        let fotosUser = photosGood ? profile.fotosLindas : profile.fotosMalas;
+        fotosUser.push({ url: data.url });
+        actualizarFotosUsuario(profile.uid, fotosUser).then((value) => {
+          setLoading(false);
+          navigation.navigate("Photos");
+        });
+      });
     });
   };
 
@@ -125,6 +163,7 @@ export default ModalGuardarFoto = (props) => {
             style={styles.btnSave}
             onPress={() => {
               guardarFoto();
+              //pruebaSubirFoto();
             }}
           >
             <Text style={styles.btnText}>Guardar</Text>

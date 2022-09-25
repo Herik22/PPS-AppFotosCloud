@@ -9,17 +9,54 @@ import {
   ContributionGraph,
   StackedBarChart,
 } from "react-native-chart-kit";
-import firebase from "../dataBase/firebase";
 import LoadingScreen from "../utils/loadingScreen";
 import ColorsPPS from "../utils/ColorsPPS";
 import { Entypo, FontAwesome } from "@expo/vector-icons";
 import { useLogin } from "../context/LoginProvider";
-
+import { db } from "../firebase-config";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 export default Estadisticas = () => {
+  const data1 = [
+    {
+      name: "Seoul",
+      population: 21500000,
+      color: "rgba(131, 167, 234, 1)",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 15,
+    },
+    {
+      name: "Toronto",
+      population: 2800000,
+      color: "#F00",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 15,
+    },
+    {
+      name: "Beijing",
+      population: 527612,
+      color: "red",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 15,
+    },
+    {
+      name: "New York",
+      population: 8538000,
+      color: "#ffffff",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 15,
+    },
+    {
+      name: "Moscow",
+      population: 11920000,
+      color: "rgb(0, 0, 255)",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 15,
+    },
+  ];
   const screenWidth = Dimensions.get("window").width;
   const screenHeight = Dimensions.get("window").height * 0.3;
-  const layout = { title: "My cool chart!" };
-  const [data, setData] = useState([]);
+
+  const [data, setData] = useState(["", "", ""]);
   const [loading, setLoading] = useState(false);
   const { photosGood, setPhotosGood, profile } = useLogin();
   const nameCollection = `post${photosGood ? "Buenos" : "Malos"}`;
@@ -33,38 +70,44 @@ export default Estadisticas = () => {
     "orange",
     "violet",
     "gray",
+    "#66FFFF",
+    "#6633FF",
+    "#CCFF66",
   ];
   useEffect(() => {
     //setLoading(true);
-    const TraerData = async () => {
-      firebase.db.collection(nameCollection).onSnapshot((querySnapshot) => {
-        const posts = [];
-        querySnapshot.docs.forEach((doc) => {
-          const { idCreador, likes, autorName, url, fecha, id } = doc.data(); // destructuro el doc
 
-          const id_ = doc.id.substring(0, 6);
-          posts.push({
-            name: id_,
-            likes: likes,
-            id: doc.id,
-            autorName: autorName,
-            url: url,
-            fecha: fecha,
-            votos_: parseInt(likes.length),
-            legendFontColor: "black",
-            legendFontSize: 15, // id del DOCUMENTO
-            color: colores[Math.round(Math.random() * (8 - 0) + 0)],
-          });
-        });
-        //console.log(posts);
-        setData(posts);
-        setLoading(false);
+    const traerData = async () => {
+      let auxPost = [];
+      const fotosRef = collection(db, nameCollection);
+      const q = query(fotosRef);
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        const { idCreador, likes, autorName, url, fecha, id } = doc.data();
+        const id_ = id.substring(0, 6);
+
+        let auxOBJ = {
+          name: id_,
+          likes: likes,
+          id: id,
+          autorName: autorName,
+          url: url,
+          fecha: fecha,
+          votos_: parseInt(likes.length),
+          legendFontColor: "black",
+          legendFontSize: 15, // id del DOCUMENTO
+          color: colores[Math.round(Math.random() * (8 - 0) + 0)],
+        };
+        auxPost.push(doc.data());
+        console.log(auxOBJ);
       });
+      setData(auxPost);
+      setLoading(false);
     };
-    TraerData();
+    traerData();
   }, []);
 
-  if (!data.length > 0) {
+  if (data.length < 1) {
     return (
       <View
         style={{
@@ -77,7 +120,7 @@ export default Estadisticas = () => {
       >
         <Text style={{ fontWeight: "bold", fontSize: 20 }}>
           {" "}
-          No hay suficientes datos{" "}
+          No hay suficientes datos 1{" "}
         </Text>
       </View>
     );
@@ -96,13 +139,14 @@ export default Estadisticas = () => {
         >
           <Text style={{ fontWeight: "bold", fontSize: 20 }}>
             {" "}
-            No hay suficientes datos{" "}
+            No hay suficientes datos 2{" "}
           </Text>
         </View>
       );
     }
   }
-  const chartConfig = {
+  const chartConfig2 = {
+    //ORIGINAL
     backgroundGradientFrom: "#1E2923",
     backgroundGradientFromOpacity: 0,
     backgroundGradientTo: "#08130D",
@@ -112,6 +156,17 @@ export default Estadisticas = () => {
     barPercentage: 0,
     useShadowColorFromDataset: false, // optional
   };
+  const chartConfig = {
+    backgroundGradientFrom: "#1E2923",
+    backgroundGradientFromOpacity: 0,
+    backgroundGradientTo: "#08130D",
+    backgroundGradientToOpacity: 0.5,
+    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+    strokeWidth: 2, // optional, default 3
+    barPercentage: 0.5,
+    useShadowColorFromDataset: false, // optional
+  };
+
   return loading ? (
     <LoadingScreen message={"Cargando datos ..."} />
   ) : (
@@ -139,15 +194,28 @@ export default Estadisticas = () => {
         </Text>
       </View>
       <View>
+        {false && (
+          <PieChart
+            data={data}
+            width={screenWidth}
+            height={screenHeight}
+            chartConfig={chartConfig}
+            accessor={"votos_"} //propiedad para los datos numericos.
+            backgroundColor={ColorsPPS.amarillo}
+            paddingLeft={"0"}
+            center={[10, 5]}
+            absolute
+          />
+        )}
         <PieChart
-          data={data}
+          data={data1}
           width={screenWidth}
-          height={screenHeight}
+          height={220}
           chartConfig={chartConfig}
-          accessor={"votos_"} //propiedad para los datos numericos.
-          backgroundColor={ColorsPPS.amarillo}
-          paddingLeft={"0"}
-          center={[10, 5]}
+          accessor={"population"}
+          backgroundColor={"transparent"}
+          paddingLeft={"15"}
+          center={[10, 50]}
           absolute
         />
       </View>

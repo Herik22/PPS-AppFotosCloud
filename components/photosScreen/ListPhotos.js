@@ -10,14 +10,16 @@ import {
   Image,
   Alert,
 } from "react-native";
+import { db, app } from "../../firebase-config";
+
+import { setDoc, doc } from "firebase/firestore";
 import { Entypo, AntDesign, Octicons, MaterialIcons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/core";
 import { useLogin } from "../../context/LoginProvider";
 import firebase from "../../dataBase/firebase";
 import ColorsPPS from "../../utils/ColorsPPS";
 
 const ListPhotos = (props) => {
-  const { photos } = props;
+  const { photos, updateFotos } = props;
   const { photosGood, setPhotosGood, profile } = useLogin();
   const nameCollection = `post${photosGood ? "Buenos" : "Malos"}`;
 
@@ -25,38 +27,52 @@ const ListPhotos = (props) => {
 
   const ItemList = (props) => {
     const { info } = props;
-    const { url, autorName, fecha, id, likes, name } = info.item;
+    const {
+      url,
+      autorName,
+      fecha,
+      id: idFotoo,
+      likes,
+      name,
+      idCreador,
+    } = info.item;
     const votos = likes.length;
 
     let votada = false;
     //console.log(info.item);
 
     likes.forEach((element) => {
-      if (element == profile.id) {
+      if (element == profile.uid) {
         votada = true;
       }
     });
 
-    const actualizarVotoFoto = async (id, data = "") => {
+    const actualizarVotoFoto = async (id) => {
       const votosUsuarios = info.item.likes;
       let yaVoto = false;
       votosUsuarios.forEach((element) => {
-        if (element == profile.id) {
+        if (element == profile.uid) {
           yaVoto = true;
         }
       });
-
       if (yaVoto) {
+        console.log("Ya voto");
         return;
       } else {
         //NO HA VOTADO
         console.log("no ha votado");
-        votosUsuarios.push(profile.id);
-        const dbRef = firebase.db.collection(nameCollection).doc(id);
-        await dbRef.set({
-          ...info.item,
-          likes: votosUsuarios,
-        });
+        votosUsuarios.push(profile.uid);
+        /* PRUEBAAA NEW FIREBASE */
+        try {
+          await setDoc(doc(db, nameCollection, id), {
+            ...info.item,
+            likes: votosUsuarios,
+          });
+          console.log("Likes Actualizados: ");
+          updateFotos();
+        } catch (e) {
+          console.error("Error Actualizando Likes: ", e);
+        }
       }
 
       /*∑ */
@@ -71,7 +87,7 @@ const ListPhotos = (props) => {
           border: "black",
           paddingBottom: 5,
           paddingTop: 5,
-          borderWidth: 1,
+          borderWidth: 0.3,
           width: "100%",
         }}
       >
@@ -106,6 +122,7 @@ const ListPhotos = (props) => {
                 alignItems: "center",
                 borderWidth: 0,
                 marginBottom: 30,
+                padding: 5,
                 backgroundColor: ColorsPPS.amarillo,
               }}
             >
@@ -118,7 +135,7 @@ const ListPhotos = (props) => {
               >
                 ID:
               </Text>
-              <Text style={{ fontSize: 20 }}> {name}</Text>
+              <Text style={{ fontSize: 6 }}> {idCreador.substring(0, 20)}</Text>
             </View>
 
             <View
@@ -146,7 +163,7 @@ const ListPhotos = (props) => {
               }}
             >
               <Text
-                style={{ fontWeight: "bold", fontSize: 14, marginRight: 5 }}
+                style={{ fontWeight: "bold", fontSize: 12, marginRight: 5 }}
               >
                 Fecha:
               </Text>
@@ -171,7 +188,7 @@ const ListPhotos = (props) => {
                 alignItems: "center",
               }}
               onPress={() => {
-                actualizarVotoFoto(id);
+                actualizarVotoFoto(idFotoo);
               }}
             >
               <AntDesign
@@ -189,14 +206,11 @@ const ListPhotos = (props) => {
   };
 
   return (
-    <ScrollView>
-      <FlatList
-        data={photos}
-        renderItem={(photo) => <ItemList info={photo} />}
-        keyExtractor={(item, index) => index.toString()}
-        style={{ borderWidth: 1 }}
-      />
-    </ScrollView>
+    <FlatList
+      data={photos}
+      renderItem={(photo) => <ItemList info={photo} />}
+      keyExtractor={(item, index) => index.toString()}
+    />
   );
 };
 

@@ -12,11 +12,12 @@ import CamaraPost from "../screens/CamaraPost";
 import { useLogin } from "../context/LoginProvider";
 import ColorsPPS from "../utils/ColorsPPS";
 import MisFotos from "../screens/MisFotos";
+
 const Stack = createNativeStackNavigator();
 
 const Init = () => {
   return (
-    <Stack.Navigator initialRouteName="Splash">
+    <Stack.Navigator initialRouteName="Login">
       <Stack.Screen
         component={Splash}
         options={{ headerShown: false }}

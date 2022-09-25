@@ -23,71 +23,70 @@ import ColorsPPS from "../utils/ColorsPPS";
 import LoadingScreen from "../utils/loadingScreen";
 import { LinearGradient } from "expo-linear-gradient";
 import firebase from "../dataBase/firebase";
+import Sizes_ from "../utils/Sizes";
+import { authentication, db } from "../firebase-config";
+import { collection, getDocs, getDoc, doc } from "firebase/firestore";
 
 const Login = (props) => {
   const { navigation } = props;
-  const { setProfile, setIsLogIn } = useLogin();
+  const { setIsLogIn } = useLogin();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
   const [hidePassword, setHidePassword] = useState(true);
   const [showModal, setShowModal] = useState(false);
-
-  const [users, setUsers] = useState([]);
+  const colectionUsers = "users";
+  const docName = "heriku";
 
   useEffect(() => {
-    TraerData();
+    let users = [{ correo: "herik@gmail.com", clave: "" }];
+    //getOneUser();
   }, []);
 
-  const TraerData = async () => {
-    firebase.db.collection("usuarios").onSnapshot((querySnapshot) => {
-      const usuarios = [];
-      querySnapshot.docs.forEach((doc) => {
-        const {
-          perfil,
-          correo,
-          clave,
-          fotosSubidasBuenas,
-          fotosSubidasMalas,
-          sexo,
-          nombre,
-        } = doc.data(); // destructuro el doc
-        usuarios.push({
-          perfil: perfil,
-          correo: correo,
-          clave: clave,
-          fotosSubidasBuenas: fotosSubidasBuenas,
-          fotosSubidasMalas: fotosSubidasMalas,
-          sexo: sexo,
-          id: doc.id,
-          nombre: nombre, // id del DOCUMENTO
-        });
-      });
-      setUsers(usuarios);
+  const getCollectionUsers = async () => {
+    const querySnapshot = await getDocs(collection(db, "users"));
+    querySnapshot.forEach((doc) => {
+      console.log(`${doc.id} => `);
+      console.log(doc.data());
     });
   };
+  const getOneUser = async () => {
+    const docRef = doc(db, colectionUsers, docName);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      console.log("Document data:", docSnap.data());
+    } else {
+      // doc.data() will be undefined in this case
+      console.log("No such document!");
+    }
+  };
 
-  const onPressLogIn = async (values) => {
-    setLoading(true);
-    console.log(values);
-    let logged = false;
-    users.forEach((user) => {
-      if (user.correo == values.email && user.clave == values.password) {
-        setProfile(user);
-        logged = true;
-      }
-    });
-    setTimeout(() => {
+  const login = (values, actions = false) => {
+    try {
+      setLoading(true);
+      authentication
+        .signInWithEmailAndPassword(values.email, values.password)
+        .then((_userCredentials) => {
+          actions && actions.resetForm();
+          setIsLogIn(true);
+        })
+        .catch((error) => {
+          switch (error.code) {
+            case "auth/user-not-found":
+              Alert.alert("¡Ops!", "¡Usuario y/o Contraseña incorrectos!");
+              break;
+            case "auth/wrong-password":
+              Alert.alert("¡Ops!", "¡Usuario y/o Contraseña incorrectos!");
+              break;
+          }
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } catch (error) {
       setLoading(false);
-      if (logged) {
-        setIsLogIn(true);
-      } else {
-        setShowModal(true);
-        return;
-      }
-    }, 2000);
-
-    //console.log(values)
+      alert(error);
+    }
   };
   const btnLogin = (bgColor, color, txtName, action) => {
     return (
@@ -123,7 +122,7 @@ const Login = (props) => {
   };
   const btnInvited = (number, txtName) => {
     const onpressInvited = (numero) => {
-      onPressLogIn({ email: "anonimo@anonimo.com", password: "4444" });
+      login({ email: `invitado${numero}@gmail.com`, password: "123456" });
     };
 
     return (
@@ -169,7 +168,6 @@ const Login = (props) => {
       </TouchableOpacity>
     );
   };
-
   const LoginValidation = yup.object({
     email: yup
       .string()
@@ -178,27 +176,29 @@ const Login = (props) => {
 
     password: yup.string().required("Ingresa tu contraseña"),
   });
-
   const formLogin = () => {
     return (
       <Formik
         initialValues={{ email: email, password: "" }}
         validationSchema={LoginValidation}
         onSubmit={(values, actions) => {
-          onPressLogIn(values);
-          actions.resetForm();
+          // onPressLogIn(values);
+          login(values, actions);
+          //actions.resetForm();
         }}
       >
         {(formikprops) => (
           <View style={{ margin: 10 }}>
             <Input
+              labelStyle={{ height: 0 }}
+              errorStyle={{ height: 0 }}
               placeholder="Correo Electrónico"
               placeholderTextColor={ColorsPPS.blanco}
               style={{ width: "100%", padding: 5 }}
               inputContainerStyle={{
                 borderColor: ColorsPPS.blanco,
 
-                borderRadius: 20,
+                borderRadius: 10,
                 borderWidth: 1,
                 width: "100%",
               }}
@@ -224,7 +224,7 @@ const Login = (props) => {
             />
 
             {formikprops.touched.email && (
-              <View style={styles.errorTextContainer}>
+              <View style={[styles.errorTextContainer, { borderWidth: 0 }]}>
                 <Text style={[styles.errorText]}>
                   {formikprops.touched.email && formikprops.errors.email}
                 </Text>
@@ -233,11 +233,13 @@ const Login = (props) => {
             <Input
               placeholder="Contraseña"
               placeholderTextColor={ColorsPPS.blanco}
+              labelStyle={{ height: 0 }}
+              errorStyle={{ height: 0 }}
               style={{ width: "100%", padding: 5 }}
               inputStyle={{ color: ColorsPPS.blanco }}
               inputContainerStyle={{
                 borderColor: ColorsPPS.blanco,
-                borderRadius: 20,
+                borderRadius: 10,
                 borderWidth: 1,
                 width: "100%",
               }}
@@ -297,9 +299,7 @@ const Login = (props) => {
       </Formik>
     );
   };
-  /*
-<LoadingScreen message={'Trayendo tus productos...'} />
-*/
+
   return loading ? (
     <LoadingScreen message={"Iniciando Sesión ... "} />
   ) : (
@@ -324,7 +324,6 @@ const Login = (props) => {
           marginTop: 20,
           margin: 6,
           borderRadius: 100,
-
           height: "100%",
           alignSelf: "center",
           justifyContent: "center",
@@ -355,12 +354,11 @@ const Login = (props) => {
           style={{
             textAlign: "center",
             color: ColorsPPS.blanco,
-            fontSize: 30,
+            fontSize: Sizes_.big,
             fontWeight: "bold",
           }}
         >
-          {" "}
-          Relevamiento Visual{" "}
+          App Relevamiento Visual
         </Text>
       </View>
 
@@ -400,6 +398,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     fontSize: 12,
+  },
+  errorTextContainer: {
+    padding: 5,
+    justifyContent: "center",
+    alignItems: "flex-start",
+    borderWidth: 0,
   },
 });
 export default Login;
