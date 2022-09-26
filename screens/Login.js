@@ -22,7 +22,6 @@ import ModalLogin from "../components/login/modalLogin";
 import ColorsPPS from "../utils/ColorsPPS";
 import LoadingScreen from "../utils/loadingScreen";
 import { LinearGradient } from "expo-linear-gradient";
-import firebase from "../dataBase/firebase";
 import Sizes_ from "../utils/Sizes";
 import { authentication, db } from "../firebase-config";
 import { collection, getDocs, getDoc, doc } from "firebase/firestore";

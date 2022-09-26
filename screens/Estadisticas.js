@@ -16,92 +16,67 @@ import { useLogin } from "../context/LoginProvider";
 import { db } from "../firebase-config";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 export default Estadisticas = () => {
-  const data1 = [
-    {
-      name: "Seoul",
-      population: 21500000,
-      color: "rgba(131, 167, 234, 1)",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
-    },
-    {
-      name: "Toronto",
-      population: 2800000,
-      color: "#F00",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
-    },
-    {
-      name: "Beijing",
-      population: 527612,
-      color: "red",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
-    },
-    {
-      name: "New York",
-      population: 8538000,
-      color: "#ffffff",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
-    },
-    {
-      name: "Moscow",
-      population: 11920000,
-      color: "rgb(0, 0, 255)",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
-    },
-  ];
+  const data1 = {
+    labels: ["January", "February", "March", "April", "May", "June"],
+    datasets: [
+      {
+        data: [20, 45, 28, 80, 99, 43],
+      },
+    ],
+  };
   const screenWidth = Dimensions.get("window").width;
   const screenHeight = Dimensions.get("window").height * 0.3;
 
-  const [data, setData] = useState(["", "", ""]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const { photosGood, setPhotosGood, profile } = useLogin();
   const nameCollection = `post${photosGood ? "Buenos" : "Malos"}`;
-  const colores = [
-    "red",
-    "blue",
-    "green",
-    "yellow",
-    "black",
-    "pink",
-    "orange",
-    "violet",
-    "gray",
-    "#66FFFF",
-    "#6633FF",
-    "#CCFF66",
-  ];
+
+  const generateColor = () => {
+    const randomColor = Math.floor(Math.random() * 16777215)
+      .toString(16)
+      .padStart(6, "0");
+    return `#${randomColor}`;
+  };
   useEffect(() => {
     //setLoading(true);
 
     const traerData = async () => {
       let auxPost = [];
+      let auxLabels = [];
+      let auxDataSets = [];
+
       const fotosRef = collection(db, nameCollection);
       const q = query(fotosRef);
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach((doc) => {
-        const { idCreador, likes, autorName, url, fecha, id } = doc.data();
-        const id_ = id.substring(0, 6);
-
-        let auxOBJ = {
-          name: id_,
-          likes: likes,
-          id: id,
-          autorName: autorName,
-          url: url,
-          fecha: fecha,
-          votos_: parseInt(likes.length),
-          legendFontColor: "black",
-          legendFontSize: 15, // id del DOCUMENTO
-          color: colores[Math.round(Math.random() * (8 - 0) + 0)],
-        };
-        auxPost.push(doc.data());
-        console.log(auxOBJ);
+        const { likes, id } = doc.data();
+        const id_ = id.substring(0, 9);
+        const votos_ = parseFloat(likes.length);
+        if (photosGood) {
+          let auxOBJ = {
+            name: id_,
+            votos: votos_,
+            color: generateColor(),
+            legendFontColor: "black",
+            legendFontSize: 15, // id del DOCUMENTO
+          };
+          auxPost.push(auxOBJ);
+        } else {
+          auxLabels.push(id_);
+          auxDataSets.push(votos_);
+        }
       });
-      setData(auxPost);
+
+      const data1 = {
+        labels: auxLabels,
+        datasets: [
+          {
+            data: auxDataSets,
+          },
+        ],
+      };
+      photosGood ? setData(auxPost) : setData(data1);
       setLoading(false);
     };
     traerData();
@@ -120,7 +95,7 @@ export default Estadisticas = () => {
       >
         <Text style={{ fontWeight: "bold", fontSize: 20 }}>
           {" "}
-          No hay suficientes datos 1{" "}
+          No hay suficientes datos{" "}
         </Text>
       </View>
     );
@@ -145,18 +120,8 @@ export default Estadisticas = () => {
       );
     }
   }
-  const chartConfig2 = {
-    //ORIGINAL
-    backgroundGradientFrom: "#1E2923",
-    backgroundGradientFromOpacity: 0,
-    backgroundGradientTo: "#08130D",
-    backgroundGradientToOpacity: 0.5,
-    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-    strokeWidth: 2, // optional, default 3
-    barPercentage: 0,
-    useShadowColorFromDataset: false, // optional
-  };
   const chartConfig = {
+    //ORIGINAL
     backgroundGradientFrom: "#1E2923",
     backgroundGradientFromOpacity: 0,
     backgroundGradientTo: "#08130D",
@@ -165,6 +130,19 @@ export default Estadisticas = () => {
     strokeWidth: 2, // optional, default 3
     barPercentage: 0.5,
     useShadowColorFromDataset: false, // optional
+  };
+  const chartConfig2 = {
+    backgroundGradientFrom: "#fff",
+    backgroundGradientFromOpacity: 0,
+    backgroundGradientTo: "#fff",
+    backgroundGradientToOpacity: 0.5,
+    fillShadowGradientOpacity: 1,
+    color: (opacity = 1) => `#023047`,
+    labelColor: (opacity = 1) => `#333`,
+    strokeWidth: 2,
+    barPercentage: 0.5,
+    useShadowColorFromDataset: false,
+    decimalPlaces: 0,
   };
 
   return loading ? (
@@ -194,30 +172,30 @@ export default Estadisticas = () => {
         </Text>
       </View>
       <View>
-        {false && (
+        {photosGood && (
           <PieChart
             data={data}
             width={screenWidth}
-            height={screenHeight}
+            height={220}
             chartConfig={chartConfig}
-            accessor={"votos_"} //propiedad para los datos numericos.
-            backgroundColor={ColorsPPS.amarillo}
-            paddingLeft={"0"}
+            accessor={"votos"} //propiedad para los datos numericos.
+            backgroundColor={"transparent"}
+            paddingLeft={"15"}
             center={[10, 5]}
             absolute
           />
         )}
-        <PieChart
-          data={data1}
-          width={screenWidth}
-          height={220}
-          chartConfig={chartConfig}
-          accessor={"population"}
-          backgroundColor={"transparent"}
-          paddingLeft={"15"}
-          center={[10, 50]}
-          absolute
-        />
+        {!photosGood && (
+          <BarChart
+            //style={graphStyle}
+            data={data}
+            width={screenWidth}
+            height={screenHeight}
+            yAxisLabel=""
+            chartConfig={chartConfig2}
+            verticalLabelRotation={0}
+          />
+        )}
       </View>
 
       <View

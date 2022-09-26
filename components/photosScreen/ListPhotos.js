@@ -15,7 +15,7 @@ import { db, app } from "../../firebase-config";
 import { setDoc, doc } from "firebase/firestore";
 import { Entypo, AntDesign, Octicons, MaterialIcons } from "@expo/vector-icons";
 import { useLogin } from "../../context/LoginProvider";
-import firebase from "../../dataBase/firebase";
+
 import ColorsPPS from "../../utils/ColorsPPS";
 
 const ListPhotos = (props) => {

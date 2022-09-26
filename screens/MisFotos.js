@@ -17,42 +17,34 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import firebase from "../dataBase/firebase";
 import { useLogin } from "../context/LoginProvider";
 import ColorsPPS from "../utils/ColorsPPS";
 import { Fontisto } from "@expo/vector-icons";
-
+import updateCurrentUser from "../dataBase/newServicesFB";
 export default MisFotos = () => {
-  const { profile, photosGood } = useLogin();
+  const { profile, photosGood, setProfile } = useLogin();
   const [photos, setPhotos] = useState([]);
   const nameCollection = `post${photosGood ? "Buenos" : "Malos"}`;
+
   useEffect(() => {
-    const getUserById = async (id) => {
-      const dbRef = firebase.db.collection("usuarios").doc(id);
-      const doc = await dbRef.get();
-
-      const user = doc.data();
-      console.log("user MIS FOTOS");
-      console.log(user);
-      setPhotos(photosGood ? user.fotosSubidasBuenas : user.fotosSubidasMalas);
-    };
-
-    // getUserById(profile.id);
+    updateCurrentUser(profile.uid, setProfile).then((val) => {
+      setPhotos(photosGood ? profile.fotosLindas : profile.fotosMalas);
+    });
   }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: ColorsPPS.amarillo }}>
-      <ScrollView>
+      <View style={{ flex: 0.8, borderWidth: 0 }}>
         <FlatList
           horizontal
           data={photos}
           renderItem={(photo) => {
-            console.log(photo);
             return (
               <View
                 style={{
-                  width: Dimensions.get("window").width * 0.95,
+                  width: Dimensions.get("window").width,
                   height: Dimensions.get("window").height * 0.8,
+                  borderWidth: 1,
                 }}
               >
                 <Image
@@ -68,16 +60,16 @@ export default MisFotos = () => {
           }}
           keyExtractor={(item, index) => index.toString()}
         />
-      </ScrollView>
+      </View>
       <View
         style={{
+          flex: 0.2,
           width: "100%",
           justifyContent: "space-evenly",
           alignContent: "center",
           alignItems: "center",
           flexDirection: "row",
           padding: 5,
-          marginBottom: 40,
         }}
       >
         <Fontisto name="photograph" size={20} color={"black"} />
