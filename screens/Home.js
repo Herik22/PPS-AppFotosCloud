@@ -32,13 +32,13 @@ export default Home = (props) => {
     const docRef = doc(db, colectionUsers, uid);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      let auxUser = docSnap.data();
-      setProfile(auxUser);
+      setProfile(docSnap.data());
     } else {
       // doc.data() will be undefined in this case
       console.log("No such document!");
     }
   };
+
   const getProfileUser = (uid) => {
     //obtener usuario segun uid
     getOneUser(uid);

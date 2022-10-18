@@ -42,24 +42,6 @@ const Login = (props) => {
     //getOneUser();
   }, []);
 
-  const getCollectionUsers = async () => {
-    const querySnapshot = await getDocs(collection(db, "users"));
-    querySnapshot.forEach((doc) => {
-      console.log(`${doc.id} => `);
-      console.log(doc.data());
-    });
-  };
-  const getOneUser = async () => {
-    const docRef = doc(db, colectionUsers, docName);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      console.log("Document data:", docSnap.data());
-    } else {
-      // doc.data() will be undefined in this case
-      console.log("No such document!");
-    }
-  };
-
   const login = (values, actions = false) => {
     try {
       setLoading(true);
@@ -340,7 +322,6 @@ const Login = (props) => {
           />
         </View>
       </LinearGradient>
-
       <View
         style={{
           marginVertical: 10,
@@ -360,11 +341,9 @@ const Login = (props) => {
           App Relevamiento Visual
         </Text>
       </View>
-
       <View style={{ flex: 0.6, width: "100%", padding: 20 }}>
         {formLogin()}
       </View>
-
       <View
         style={{
           flex: 0.2,

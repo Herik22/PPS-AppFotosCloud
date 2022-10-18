@@ -2,7 +2,7 @@
   "expo": {
     "name": "AppFotosCloud",
     "slug": "AppFotosCloud",
-    "version": "1.0.3",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "plugins": [
@@ -16,7 +16,7 @@
     "splash": {
       "image": "./assets/splash/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#98959D"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -27,7 +27,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.appfotos.cloud",
-      "buildNumber": "1.0.3"
+      "buildNumber": "1.0.5"
 
     },
     "android": {
@@ -36,7 +36,7 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.appfotos.cloud",
-      "versionCode": 4
+      "versionCode": 6
     },
     "web": {
       "favicon": "./assets/favicon.png"
